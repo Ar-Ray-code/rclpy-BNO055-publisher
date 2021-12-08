@@ -1,14 +1,10 @@
 #!/bin/python3
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import QoSHistoryPolicy, QoSProfile
-# IMU
 from sensor_msgs.msg import Imu
 
 # SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
 # SPDX-License-Identifier: MIT
-
-import time
 import board
 import adafruit_bno055
 
@@ -17,17 +13,24 @@ class bno055_ros2(Node):
     def __init__(self) -> None:
         super().__init__("scripts_main")
 
-        i2c = board.I2C()
-        self.sensor = adafruit_bno055.BNO055_I2C(i2c)
-        self.last_val = 0xFFFF
-
-        pub_qos = QoSProfile(history=QoSHistoryPolicy.KEEP_LAST, depth=1)
-
-        self.pub = self.create_publisher(Imu, 'pub_bno055',pub_qos)
-
+        self.pub = self.create_publisher(Imu, 'pub_bno055',10)
 
         self.declare_parameter('pub_rate',30)
-        param = self.get_parameter('pub_rate')
+        self.declare_parameter('i2c_bus',1)
+        self.declare_parameter('i2c_address',40)
+
+        param = self.get_parameter('pub_rate').get_parameter_value().integer_value
+        i2c_bus = self.get_parameter('i2c_bus').get_parameter_value().integer_value
+        i2c_address = self.get_parameter('i2c_address').get_parameter_value().integer_value
+
+#       BNO055 Setting =========================================================
+        i2c = board.I2C(i2c_bus)
+        # 40 is 0x28
+        # 41 is 0x29
+        self.sensor = adafruit_bno055.BNO055_I2C(i2c, i2c_address)
+        self.last_val = 0xFFFF
+
+        # Start Loop ============================================================
         hz = param.get_parameter_value().integer_value
         self.get_logger().info(str())
         period = 1/hz
