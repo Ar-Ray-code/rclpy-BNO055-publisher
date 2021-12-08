@@ -16,22 +16,21 @@ class bno055_ros2(Node):
         self.pub = self.create_publisher(Imu, 'pub_bno055',10)
 
         self.declare_parameter('pub_rate',30)
-        self.declare_parameter('i2c_bus',1)
+        # self.declare_parameter('i2c_bus',1)
         self.declare_parameter('i2c_address',40)
 
-        param = self.get_parameter('pub_rate').get_parameter_value().integer_value
-        i2c_bus = self.get_parameter('i2c_bus').get_parameter_value().integer_value
+        hz = self.get_parameter('pub_rate').get_parameter_value().integer_value
+        # i2c_bus = self.get_parameter('i2c_bus').get_parameter_value().integer_value
         i2c_address = self.get_parameter('i2c_address').get_parameter_value().integer_value
 
 #       BNO055 Setting =========================================================
-        i2c = board.I2C(i2c_bus)
+        i2c = board.I2C()
         # 40 is 0x28
         # 41 is 0x29
         self.sensor = adafruit_bno055.BNO055_I2C(i2c, i2c_address)
         self.last_val = 0xFFFF
 
         # Start Loop ============================================================
-        hz = param.get_parameter_value().integer_value
         self.get_logger().info(str())
         period = 1/hz
         self.get_logger().info('period: '+str(period))
